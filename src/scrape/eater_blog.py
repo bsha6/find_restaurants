@@ -1,11 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
 from tenacity import retry, stop_after_attempt, wait_exponential
-from src.database.database import get_db
-from src.database import crud
 import logging
 import json
 import tldextract
+
+from src.database.database import get_db
+from src.database import crud
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
