@@ -12,6 +12,8 @@ wheels/
 # Environment variables and config
 .env
 
-.qodo
 .DS_Store
+.qodo
 .vscode
+.cursor
+.coverage
