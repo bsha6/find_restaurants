@@ -1,7 +1,8 @@
-from .database import engine
+from .database import get_engine
 from . import models
 
 def init_db():
+    engine = get_engine()
     models.Base.metadata.create_all(bind=engine)
 
 if __name__ == "__main__":

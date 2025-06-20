@@ -5,6 +5,8 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 import logging
 import json
 import tldextract
+import concurrent.futures
+import time
 
 from src.database.database import get_db
 from src.database import crud
@@ -151,15 +153,15 @@ def scrape_eater_blog(url: str) -> list[dict]:
         logger.info("Saved HTML response to debug_response.html")
         restaurants = extract_restaurant_data(response.text, url)
         logger.info(f"Found {len(restaurants)} restaurants")
-        db = next(get_db())
-        for restaurant in restaurants:
-            existing = crud.get_restaurant_by_address(db, restaurant['address'])
-            if existing:
-                logger.info(f"Updating existing restaurant at address {restaurant['address']}: {restaurant['name']}")
-                crud.update_restaurant(db, existing.id, restaurant) # type: ignore
-            else:
-                logger.info(f"Creating new restaurant: {restaurant['name']} at {restaurant['address']}")
-                crud.create_restaurant(db, restaurant)
+        with get_db() as db:
+            for restaurant in restaurants:
+                existing = crud.get_restaurant_by_address(db, restaurant['address'])
+                if existing:
+                    logger.info(f"Updating existing restaurant at address {restaurant['address']}: {restaurant['name']}")
+                    crud.update_restaurant(db, existing.id, restaurant) # type: ignore
+                else:
+                    logger.info(f"Creating new restaurant: {restaurant['name']} at {restaurant['address']}")
+                    crud.create_restaurant(db, restaurant)
         return restaurants
     except requests.RequestException as e:
         logger.error(f"Error scraping {url}: {e}")
@@ -168,16 +170,37 @@ def scrape_eater_blog(url: str) -> list[dict]:
         logger.error(f"Unexpected error: {e}")
         raise
 
+def scrape_eater_blogs_concurrently(urls: list[str], max_workers: int = 5):
+    """
+    Scrape multiple Eater blog posts concurrently.
+    Args:
+        urls (list[str]): A list of Eater blog post URLs to scrape.
+        max_workers (int): The maximum number of threads to use.
+    """
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_url = {executor.submit(scrape_eater_blog, url): url for url in urls}
+        for future in concurrent.futures.as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                restaurants = future.result()
+                logger.info(f"Successfully processed {len(restaurants)} restaurants from {url}")
+            except Exception as exc:
+                logger.error(f'{url} generated an exception: {exc}')
+        
+        # Explicitly shutdown the executor and wait for threads to finish
+        executor.shutdown(wait=True)
+    
+    # Give threads a moment to fully clean up before interpreter shutdown
+    time.sleep(0.1)
+    logger.info("All threads completed and cleaned up successfully")
+
 if __name__ == "__main__":
-    urls = [
+    urls_to_scrape = [
         # "https://dc.eater.com/maps/dc-best-restaurants-38",
         # "https://www.eater.com/maps/best-new-restaurants-columbus-ohio",
-        # "https://dc.eater.com/maps/best-new-restaurants-heatmap-dc"
-        "https://sf.eater.com/maps/best-restaurants-san-francisco-38"
+        # "https://dc.eater.com/maps/best-new-restaurants-heatmap-dc",
+        "https://sf.eater.com/maps/best-restaurants-san-francisco-38",
+        "https://sf.eater.com/maps/best-new-restaurants-san-francisco",
+        "https://sf.eater.com/maps/best-sushi-restaurants-omakase-san-francisco"
     ]
-    for url in urls:
-        try:
-            restaurants = scrape_eater_blog(url)
-            logger.info(f"Successfully processed {len(restaurants)} restaurants from {url}")
-        except Exception as e:
-            logger.error(f"Failed to process {url}: {e}")
+    scrape_eater_blogs_concurrently(urls_to_scrape)
