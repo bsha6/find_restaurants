@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import Mock, patch
 from bs4 import BeautifulSoup
 import requests
+import json
+
 from src.scrape.eater_blog import (
     parse_json_ld,
     get_restaurant_items,
@@ -9,8 +11,8 @@ from src.scrape.eater_blog import (
     build_restaurant_dict,
     extract_restaurant_data,
     scrape_eater_blog,
+    scrape_eater_blogs_concurrently,
 )
-import json
 
 
 # Happy Path Tests
@@ -173,3 +175,133 @@ def test_scrape_eater_blog_retry_success(mock_get, mock_response, mock_sessionlo
     result = scrape_eater_blog("https://test.eater.com/test-article")
     assert len(result) == 1
     assert mock_get.call_count == 2  # Verify retry happened 
+
+
+# Concurrent Scraping Tests
+
+@patch("src.scrape.eater_blog.scrape_eater_blog")
+def test_scrape_eater_blogs_concurrently_success(mock_scrape_single):
+    """Test successful concurrent scraping of multiple URLs."""
+    # Mock successful results for each URL
+    mock_scrape_single.side_effect = [
+        [{"name": "Restaurant 1", "address": "Address 1"}],
+        [{"name": "Restaurant 2", "address": "Address 2"}],
+        [{"name": "Restaurant 3", "address": "Address 3"}]
+    ]
+    
+    urls = [
+        "https://test.eater.com/url1",
+        "https://test.eater.com/url2", 
+        "https://test.eater.com/url3"
+    ]
+    
+    # Should not raise any exceptions
+    scrape_eater_blogs_concurrently(urls, max_workers=2)
+    
+    # Verify each URL was called
+    assert mock_scrape_single.call_count == 3
+    called_urls = [call[0][0] for call in mock_scrape_single.call_args_list]
+    assert set(called_urls) == set(urls)
+
+@patch("src.scrape.eater_blog.scrape_eater_blog")
+def test_scrape_eater_blogs_concurrently_with_failures(mock_scrape_single):
+    """Test concurrent scraping when some URLs fail."""
+    # Mock mixed success and failure results
+    mock_scrape_single.side_effect = [
+        [{"name": "Restaurant 1", "address": "Address 1"}],  # Success
+        requests.RequestException("Network error"),          # Failure
+        [{"name": "Restaurant 3", "address": "Address 3"}]   # Success
+    ]
+    
+    urls = [
+        "https://test.eater.com/url1",
+        "https://test.eater.com/url2", 
+        "https://test.eater.com/url3"
+    ]
+    
+    # Should not raise exceptions even when individual URLs fail
+    scrape_eater_blogs_concurrently(urls, max_workers=2)
+    
+    # Verify all URLs were attempted
+    assert mock_scrape_single.call_count == 3
+
+@patch("src.scrape.eater_blog.scrape_eater_blog")
+def test_scrape_eater_blogs_concurrently_empty_list(mock_scrape_single):
+    """Test concurrent scraping with empty URL list."""
+    scrape_eater_blogs_concurrently([])
+    
+    # Should not call scrape_eater_blog at all
+    assert mock_scrape_single.call_count == 0
+
+@patch("src.scrape.eater_blog.scrape_eater_blog")
+def test_scrape_eater_blogs_concurrently_single_url(mock_scrape_single):
+    """Test concurrent scraping with single URL."""
+    mock_scrape_single.return_value = [{"name": "Solo Restaurant", "address": "Solo Address"}]
+    
+    urls = ["https://test.eater.com/single-url"]
+    
+    scrape_eater_blogs_concurrently(urls, max_workers=1)
+    
+    assert mock_scrape_single.call_count == 1
+    assert mock_scrape_single.call_args[0][0] == urls[0]
+
+@patch("src.scrape.eater_blog.scrape_eater_blog")
+def test_scrape_eater_blogs_concurrently_custom_max_workers(mock_scrape_single):
+    """Test concurrent scraping with custom max_workers parameter."""
+    mock_scrape_single.side_effect = [
+        [{"name": f"Restaurant {i}", "address": f"Address {i}"}] 
+        for i in range(10)
+    ]
+    
+    urls = [f"https://test.eater.com/url{i}" for i in range(10)]
+    
+    # Test with different worker counts
+    scrape_eater_blogs_concurrently(urls, max_workers=3)
+    
+    assert mock_scrape_single.call_count == 10
+
+@patch("src.scrape.eater_blog.scrape_eater_blog")
+@patch("src.scrape.eater_blog.logger")
+def test_scrape_eater_blogs_concurrently_logs_results(mock_logger, mock_scrape_single):
+    """Test that concurrent scraping logs success and failure messages."""
+    mock_scrape_single.side_effect = [
+        [{"name": "Restaurant 1"}],              # Success
+        requests.RequestException("Test error")  # Failure
+    ]
+    
+    urls = ["https://test.eater.com/success", "https://test.eater.com/failure"]
+    
+    scrape_eater_blogs_concurrently(urls)
+    
+    # Check that both success and error messages were logged
+    info_calls = [call for call in mock_logger.info.call_args_list]
+    error_calls = [call for call in mock_logger.error.call_args_list]
+    
+    # Should have success log for the working URL
+    success_logged = any("Successfully processed 1 restaurants" in str(call) for call in info_calls)
+    assert success_logged
+    
+    # Should have error log for the failing URL
+    error_logged = any("generated an exception" in str(call) for call in error_calls)
+    assert error_logged
+
+@patch("src.scrape.eater_blog.scrape_eater_blog") 
+def test_scrape_eater_blogs_concurrently_all_failures(mock_scrape_single):
+    """Test concurrent scraping when all URLs fail."""
+    mock_scrape_single.side_effect = [
+        requests.RequestException("Error 1"),
+        requests.RequestException("Error 2"),
+        requests.RequestException("Error 3")
+    ]
+    
+    urls = [
+        "https://test.eater.com/fail1",
+        "https://test.eater.com/fail2",
+        "https://test.eater.com/fail3"
+    ]
+    
+    # Should handle all failures gracefully without raising
+    scrape_eater_blogs_concurrently(urls)
+    
+    # All URLs should have been attempted
+    assert mock_scrape_single.call_count == 3 
