@@ -1,0 +1,2 @@
+   export SQLITE_DATABASE_PATH=/path/to/your/database/food_spots.db
+   export PYTHONPATH=/path/to/your/project/find_restaurants/
