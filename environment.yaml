@@ -1,9 +1,11 @@
 name: find_food
 channels:
+  - anaconda
   - defaults
 dependencies:
   - bzip2=1.0.8=h80987f9_6
   - ca-certificates=2025.2.25=hca03da5_0
+  - click=8.1.8=py313hca03da5_0
   - expat=2.7.1=h313beb8_0
   - greenlet=3.1.1=py313h313beb8_0
   - libcxx=14.0.6=h848a8c0_0
