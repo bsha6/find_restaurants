@@ -109,13 +109,13 @@ def test_extract_restaurant_data_missing_address(sample_json_ld):
     result = extract_restaurant_data(html, "https://test.eater.com")
     assert len(result) == 0
 
+@patch("src.scrape.eater_blog.get_db")
 @patch("requests.get")
-def test_scrape_eater_blog_success(mock_get, mock_response, mock_sessionlocal):
+def test_scrape_eater_blog_success(mock_get, mock_get_db, mock_response):
     """Test successful scraping of Eater blog."""
     mock_get.return_value = mock_response
     mock_db = Mock()
-    mock_sessionlocal.return_value = Mock()
-    mock_sessionlocal.return_value.return_value = mock_db
+    mock_get_db.return_value.__enter__.return_value = mock_db
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
     result = scrape_eater_blog("https://test.eater.com/test-article")
@@ -160,16 +160,16 @@ def test_scrape_eater_blog_http_error(mock_get):
     with pytest.raises(requests.RequestException):
         scrape_eater_blog("https://test.eater.com/test-article")
 
+@patch("src.scrape.eater_blog.get_db")
 @patch("requests.get")
-def test_scrape_eater_blog_retry_success(mock_get, mock_response, mock_sessionlocal):
+def test_scrape_eater_blog_retry_success(mock_get, mock_get_db, mock_response):
     """Test successful retry after initial failure."""
     mock_get.side_effect = [
         requests.RequestException("Test error"),
         mock_response
     ]
     mock_db = Mock()
-    mock_sessionlocal.return_value = Mock()
-    mock_sessionlocal.return_value.return_value = mock_db
+    mock_get_db.return_value.__enter__.return_value = mock_db
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
     result = scrape_eater_blog("https://test.eater.com/test-article")

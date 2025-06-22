@@ -12,12 +12,6 @@ def mock_sqlite_env(tmp_path):
         yield db_path
 
 @pytest.fixture
-def mock_sessionlocal():
-    """Mock get_sessionlocal to avoid real DB connections."""
-    with mock.patch("src.database.database.get_sessionlocal") as mock_session:
-        yield mock_session
-
-@pytest.fixture
 def sample_json_ld():
     """Provide sample JSON-LD data for testing restaurant parsing."""
     return {
