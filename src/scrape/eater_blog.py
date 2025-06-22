@@ -199,8 +199,11 @@ if __name__ == "__main__":
         # "https://dc.eater.com/maps/dc-best-restaurants-38",
         # "https://www.eater.com/maps/best-new-restaurants-columbus-ohio",
         # "https://dc.eater.com/maps/best-new-restaurants-heatmap-dc",
-        "https://sf.eater.com/maps/best-restaurants-san-francisco-38",
-        "https://sf.eater.com/maps/best-new-restaurants-san-francisco",
-        "https://sf.eater.com/maps/best-sushi-restaurants-omakase-san-francisco"
+        # "https://sf.eater.com/maps/best-restaurants-san-francisco-38",
+        # "https://sf.eater.com/maps/best-new-restaurants-san-francisco",
+        # "https://sf.eater.com/maps/best-sushi-restaurants-omakase-san-francisco",
+    #     "https://ny.eater.com/maps/best-new-york-restaurants-38-map",
+    #     "https://ny.eater.com/maps/best-new-nyc-restaurants-heatmap",
+    #     "https://ny.eater.com/maps/classic-restaurants-nyc"
     ]
     scrape_eater_blogs_concurrently(urls_to_scrape)
