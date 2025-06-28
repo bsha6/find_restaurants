@@ -11,9 +11,11 @@ wheels/
 
 # Environment variables and config
 .env
+.envrc
 
 .DS_Store
 .qodo
 .vscode
 .cursor
 .coverage
+logs/
