@@ -20,13 +20,18 @@ This project aims to create a comprehensive database of restaurants from various
 - Cuisine
   - Identify the primary culinary style (e.g., Italian, Japanese, American comfort food, fusion).
   - Specify any regional specializations (e.g., Northern Italian, Okinawan, Tex-Mex).
+  - Identify the primary culinary style (e.g., Italian, Japanese, American comfort food, fusion).
+  - Specify any regional specializations (e.g., Northern Italian, Okinawan, Tex-Mex).
 - Vibe/Atmosphere
+  - Describe the general atmosphere (e.g., cozy, bustling, elegant, relaxed, trendy, historic).
+  - Consider the target audience (e.g., families, couples, business, hipsters).
   - Describe the general atmosphere (e.g., cozy, bustling, elegant, relaxed, trendy, historic).
   - Consider the target audience (e.g., families, couples, business, hipsters).
 - Notable Dishes
 - Special Features (outdoor seating, reservations required, etc.)
 - Price Point (budget, mid-range, high-end)
 - Local Popularity/Reputation
+
 
 
 ## Technical Components
@@ -111,14 +116,34 @@ This project aims to create a comprehensive database of restaurants from various
 - Scalability & Performance
   - [X] Single-threaded Scraping: Right now, you're scraping URLs one at a time. That's fine for a couple of URLs, but if you want to scale, you need to go async or multi-threaded. Otherwise, you'll be waiting all day for your data.
   - [X] Database Connections: You're calling next(get_db()) inside the loop. If get_db() is a generator that yields a session, you might want to manage your session context better, especially if you go multi-threaded.
+  - [X] Single-threaded Scraping: Right now, you're scraping URLs one at a time. That's fine for a couple of URLs, but if you want to scale, you need to go async or multi-threaded. Otherwise, you'll be waiting all day for your data.
+  - [X] Database Connections: You're calling next(get_db()) inside the loop. If get_db() is a generator that yields a session, you might want to manage your session context better, especially if you go multi-threaded.
 - Error Handling
   - Broad Exception Catching: You're catching Exception everywhere. That's like using a bazooka to kill a fly. Be more specific where you can, so you don't hide real bugs.
   - Logging Sensitive Data: You're logging response headers and saving HTML to a file. That's cool for debugging, but don't do that in production unless you want to fill up your disk and maybe leak some sensitive info.
 - Code Quality & Best Practices
   - Magic Strings: You've got class names like 'hkfm3hg' and 'duet--article--map-card' hardcoded. If Eater changes their markup, your code breaks. Consider making these constants at the top of your file, or better yet, make them configurable.
   - [X] Function Length: extract_restaurant_data is getting a little chunky. Break it up if you can—maybe one function for parsing JSON-LD, another for extracting from the map card.
+  - [X] Function Length: extract_restaurant_data is getting a little chunky. Break it up if you can—maybe one function for parsing JSON-LD, another for extracting from the map card.
   - Type Hints: You're using them in some places, but not everywhere. Be consistent. It helps with readability and tooling.
-  - [X] Testing: I don't see any tests here. You better have some in tests/ or I'm gonna be real mad. If you don't, write some. Use fixtures and mocks for your DB and HTTP calls.
+  - [X] Basic Test Coverage
+- Unit Test Quality & Best Practices
+  For: test_config_loader
+  - **Mocking Complexity**: The path mocking in `test_load_urls_from_markdown_relative_path()` is overly complex - mocking `Path.parent.parent.parent` chain instead of just mocking `get_project_root()`. Simplify by directly mocking the utility function.
+  - **Code Duplication**: Every test repeats the same `mock_open` + `patch("builtins.open")` + `patch("os.path.isabs")` pattern. Create a helper fixture in conftest.py to reduce duplication and improve maintainability.
+  - **Missing Edge Cases**: Need tests for Eater subdomain filtering (ny.eater.com, dc.eater.com), regional parsing edge cases (URLs under Notes sections), and encoding error handling for international restaurant data.
+  - **Temp File Management**: Integration test uses manual temp file cleanup with `os.unlink()` instead of pytest's `tmp_path` fixture or `delete=True` parameter. Use proper pytest patterns.
+  - **Error Specificity**: Tests only cover `FileNotFoundError` and `PermissionError` but not other `IOError` subclasses or encoding issues that could occur with international content.
+  - **Fixture Utilization**: Not leveraging existing fixtures from conftest.py - should check for reusable mocks before creating new ones.
+  - **URL Validation Testing**: Missing tests for malicious URLs, edge cases in regex parsing, and comprehensive Eater domain filtering logic.
+  
+  **Priority Fixes for Unit Tests:**
+  1. Create `@pytest.fixture def mock_file_operations()` helper in conftest.py to eliminate code duplication
+  2. Replace complex Path mocking with simple `patch("src.utils.config_loader.get_project_root")`
+  3. Add missing test cases: subdomain filtering, Notes section exclusion, encoding errors
+  4. Convert integration test to use `tmp_path` fixture instead of manual cleanup
+  5. Add comprehensive URL validation and edge case testing
+  
 - Extensibility
   - Hardcoded Source Extraction: You're using tldextract to get the domain, but you're assuming the source is always the domain of the restaurant URL. That might not always be true. Make it flexible.
   - No Rate Limiting: If you start scraping a lot, you might get blocked. Consider adding a delay or using a pool of proxies.
@@ -128,11 +153,16 @@ This project aims to create a comprehensive database of restaurants from various
   - Main Guard: You've got a __main__ block, but you're running real scrapes there. For production, make a CLI or a proper entrypoint.
 - Scalability Suggestions
   - [X] Parallelization: Use concurrent.futures.ThreadPoolExecutor or asyncio with aiohttp for fetching multiple URLs at once.
+  - [X] Parallelization: Use concurrent.futures.ThreadPoolExecutor or asyncio with aiohttp for fetching multiple URLs at once.
   - Queue System: For serious scale, use a task queue like Celery or RQ. That way, you can distribute scraping jobs.
   - Configurable Settings: Move magic strings and constants to a config file or environment variables.
   - Monitoring: Add metrics (Prometheus, Sentry, whatever) so you know when things go wrong at scale.
   - Testing: Mock your HTTP requests and DB calls. Use pytest fixtures, and check your conftest.py for reusable mocks.
 
+
+### Misc Suggestions
+- If they offer free bread or chips lol
+- A bread evaluation (can we get this from reviews?)
 
 ### Misc Suggestions
 - If they offer free bread or chips lol

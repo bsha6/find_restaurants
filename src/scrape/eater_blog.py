@@ -10,6 +10,7 @@ import time
 
 from src.database.database import get_db
 from src.database import crud
+from src.utils.config_loader import load_urls_from_markdown
 
 
 # Set up logging
@@ -194,16 +195,14 @@ def scrape_eater_blogs_concurrently(urls: list[str], max_workers: int = 5):
     time.sleep(0.1)
     logger.info("All threads completed and cleaned up successfully")
 
+
+
 if __name__ == "__main__":
-    urls_to_scrape = [
-        # "https://dc.eater.com/maps/dc-best-restaurants-38",
-        # "https://www.eater.com/maps/best-new-restaurants-columbus-ohio",
-        # "https://dc.eater.com/maps/best-new-restaurants-heatmap-dc",
-        # "https://sf.eater.com/maps/best-restaurants-san-francisco-38",
-        # "https://sf.eater.com/maps/best-new-restaurants-san-francisco",
-        # "https://sf.eater.com/maps/best-sushi-restaurants-omakase-san-francisco",
-    #     "https://ny.eater.com/maps/best-new-york-restaurants-38-map",
-    #     "https://ny.eater.com/maps/best-new-nyc-restaurants-heatmap",
-    #     "https://ny.eater.com/maps/classic-restaurants-nyc"
-    ]
-    scrape_eater_blogs_concurrently(urls_to_scrape)
+    # Load URLs from the markdown configuration file
+    urls_to_scrape = load_urls_from_markdown()
+    
+    if not urls_to_scrape:
+        logger.error("No URLs found to scrape. Check your configuration file.")
+    else:
+        logger.info(f"Starting scrape of {len(urls_to_scrape)} URLs")
+        scrape_eater_blogs_concurrently(urls_to_scrape)
