@@ -20,13 +20,11 @@ This project aims to create a comprehensive database of restaurants from various
 - Cuisine
   - Identify the primary culinary style (e.g., Italian, Japanese, American comfort food, fusion).
   - Specify any regional specializations (e.g., Northern Italian, Okinawan, Tex-Mex).
-  - Identify the primary culinary style (e.g., Italian, Japanese, American comfort food, fusion).
-  - Specify any regional specializations (e.g., Northern Italian, Okinawan, Tex-Mex).
+  
 - Vibe/Atmosphere
   - Describe the general atmosphere (e.g., cozy, bustling, elegant, relaxed, trendy, historic).
   - Consider the target audience (e.g., families, couples, business, hipsters).
-  - Describe the general atmosphere (e.g., cozy, bustling, elegant, relaxed, trendy, historic).
-  - Consider the target audience (e.g., families, couples, business, hipsters).
+  
 - Notable Dishes
 - Special Features (outdoor seating, reservations required, etc.)
 - Price Point (budget, mid-range, high-end)
@@ -116,15 +114,14 @@ This project aims to create a comprehensive database of restaurants from various
 - Scalability & Performance
   - [X] Single-threaded Scraping: Right now, you're scraping URLs one at a time. That's fine for a couple of URLs, but if you want to scale, you need to go async or multi-threaded. Otherwise, you'll be waiting all day for your data.
   - [X] Database Connections: You're calling next(get_db()) inside the loop. If get_db() is a generator that yields a session, you might want to manage your session context better, especially if you go multi-threaded.
-  - [X] Single-threaded Scraping: Right now, you're scraping URLs one at a time. That's fine for a couple of URLs, but if you want to scale, you need to go async or multi-threaded. Otherwise, you'll be waiting all day for your data.
-  - [X] Database Connections: You're calling next(get_db()) inside the loop. If get_db() is a generator that yields a session, you might want to manage your session context better, especially if you go multi-threaded.
+
 - Error Handling
   - Broad Exception Catching: You're catching Exception everywhere. That's like using a bazooka to kill a fly. Be more specific where you can, so you don't hide real bugs.
   - Logging Sensitive Data: You're logging response headers and saving HTML to a file. That's cool for debugging, but don't do that in production unless you want to fill up your disk and maybe leak some sensitive info.
 - Code Quality & Best Practices
   - Magic Strings: You've got class names like 'hkfm3hg' and 'duet--article--map-card' hardcoded. If Eater changes their markup, your code breaks. Consider making these constants at the top of your file, or better yet, make them configurable.
   - [X] Function Length: extract_restaurant_data is getting a little chunky. Break it up if you can—maybe one function for parsing JSON-LD, another for extracting from the map card.
-  - [X] Function Length: extract_restaurant_data is getting a little chunky. Break it up if you can—maybe one function for parsing JSON-LD, another for extracting from the map card.
+
   - Type Hints: You're using them in some places, but not everywhere. Be consistent. It helps with readability and tooling.
   - [X] Basic Test Coverage
 - Unit Test Quality & Best Practices
@@ -153,16 +150,12 @@ This project aims to create a comprehensive database of restaurants from various
   - Main Guard: You've got a __main__ block, but you're running real scrapes there. For production, make a CLI or a proper entrypoint.
 - Scalability Suggestions
   - [X] Parallelization: Use concurrent.futures.ThreadPoolExecutor or asyncio with aiohttp for fetching multiple URLs at once.
-  - [X] Parallelization: Use concurrent.futures.ThreadPoolExecutor or asyncio with aiohttp for fetching multiple URLs at once.
+
   - Queue System: For serious scale, use a task queue like Celery or RQ. That way, you can distribute scraping jobs.
   - Configurable Settings: Move magic strings and constants to a config file or environment variables.
   - Monitoring: Add metrics (Prometheus, Sentry, whatever) so you know when things go wrong at scale.
   - Testing: Mock your HTTP requests and DB calls. Use pytest fixtures, and check your conftest.py for reusable mocks.
 
-
-### Misc Suggestions
-- If they offer free bread or chips lol
-- A bread evaluation (can we get this from reviews?)
 
 ### Misc Suggestions
 - If they offer free bread or chips lol

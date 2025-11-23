@@ -3,6 +3,10 @@
 ## Washington DC
 - https://dc.eater.com/maps/dc-best-restaurants-38
 - https://dc.eater.com/maps/best-new-restaurants-heatmap-dc
+- https://dc.eater.com/maps/dc-michelin-stars-restaurants-mapped
+- https://dc.eater.com/maps/best-pizza-restaurants-dc
+- https://dc.eater.com/maps/best-italian-restaurants-pasta-dc
+- https://dc.eater.com/maps/best-new-happy-hours-dc
 
 ## Columbus, Ohio
 - https://www.eater.com/maps/best-new-restaurants-columbus-ohio

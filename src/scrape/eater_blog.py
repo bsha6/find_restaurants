@@ -8,7 +8,7 @@ import tldextract
 import concurrent.futures
 import time
 
-from src.database.database import get_db
+from src.database.database import get_db, close_database
 from src.database import crud
 from src.utils.config_loader import load_urls_from_markdown
 
@@ -70,7 +70,7 @@ def extract_map_card_info(soup: BeautifulSoup, restaurant: dict) -> tuple[str | 
     description = None
     map_card = soup.find('div', {'class': 'duet--article--map-card', 'data-slug': restaurant.get('url', '').split('#')[-1]})
     if isinstance(map_card, Tag):
-        address_span = map_card.find('span', class_='hkfm3hg')
+        address_span = map_card.find('span', class_='hkfm3hh')
         if address_span:
             address = address_span.text.strip()
         description_paragraphs = map_card.find_all('p', class_='duet--article--dangerously-set-cms-markup')
@@ -178,6 +178,8 @@ def scrape_eater_blogs_concurrently(urls: list[str], max_workers: int = 5):
         urls (list[str]): A list of Eater blog post URLs to scrape.
         max_workers (int): The maximum number of threads to use.
     """
+    if not isinstance(urls, list):
+        raise ValueError(f"urls must be a list, not a {type(urls)}")
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_url = {executor.submit(scrape_eater_blog, url): url for url in urls}
         for future in concurrent.futures.as_completed(future_to_url):
@@ -188,8 +190,7 @@ def scrape_eater_blogs_concurrently(urls: list[str], max_workers: int = 5):
             except Exception as exc:
                 logger.error(f'{url} generated an exception: {exc}')
         
-        # Explicitly shutdown the executor and wait for threads to finish
-        executor.shutdown(wait=True)
+
     
     # Give threads a moment to fully clean up before interpreter shutdown
     time.sleep(0.1)
@@ -197,7 +198,7 @@ def scrape_eater_blogs_concurrently(urls: list[str], max_workers: int = 5):
 
 
 
-if __name__ == "__main__":
+def main():
     # Load URLs from the markdown configuration file
     urls_to_scrape = load_urls_from_markdown()
     
@@ -206,3 +207,9 @@ if __name__ == "__main__":
     else:
         logger.info(f"Starting scrape of {len(urls_to_scrape)} URLs")
         scrape_eater_blogs_concurrently(urls_to_scrape)
+    
+    # Clean up database resources
+    close_database()
+
+if __name__ == "__main__":
+    main()

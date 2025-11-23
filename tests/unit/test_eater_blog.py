@@ -85,7 +85,7 @@ def test_extract_restaurant_data_mixed_items(sample_json_ld):
             {json.dumps(sample_json_ld)}
         </script>
         <div class="duet--article--map-card" data-slug="test-slug">
-            <span class="hkfm3hg">123 Test St, Test City, TC 12345</span>
+            <span class="hkfm3hh">123 Test St, Test City, TC 12345</span>
             <p class="duet--article--dangerously-set-cms-markup">A fantastic test restaurant.</p>
         </div>
     </html>
@@ -305,3 +305,32 @@ def test_scrape_eater_blogs_concurrently_all_failures(mock_scrape_single):
     
     # All URLs should have been attempted
     assert mock_scrape_single.call_count == 3 
+
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        ("not a list"),
+        (123),
+        (None),
+        ({"key": "value"}),
+        ((1, 2, 3),)
+    ],
+    ids=[
+        "string_input",
+        "integer_input",
+        "none_input",
+        "dict_input",
+        "tuple_input"
+    ]
+)
+def test_scrape_eater_blogs_concurrently_invalid_input(invalid_input):
+    """
+    Test that ValueError is raised when input is not a list.
+    """
+    
+    with pytest.raises(ValueError) as excinfo:
+        scrape_eater_blogs_concurrently(invalid_input)
+    
+    expected_message = f"urls must be a list, not a {type(invalid_input)}"
+    
+    assert str(excinfo.value) == expected_message
