@@ -34,4 +34,12 @@ def get_db():
     try:
         yield db
     finally:
-        session_local.remove() 
+        session_local.remove()
+
+def close_database():
+    global _sessionlocal
+    if _sessionlocal:
+        _sessionlocal.remove()
+        if _sessionlocal.bind:
+            _sessionlocal.bind.dispose()
+ 

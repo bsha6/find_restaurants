@@ -8,7 +8,7 @@ import tldextract
 import concurrent.futures
 import time
 
-from src.database.database import get_db
+from src.database.database import get_db, close_database
 from src.database import crud
 from src.utils.config_loader import load_urls_from_markdown
 
@@ -188,8 +188,7 @@ def scrape_eater_blogs_concurrently(urls: list[str], max_workers: int = 5):
             except Exception as exc:
                 logger.error(f'{url} generated an exception: {exc}')
         
-        # Explicitly shutdown the executor and wait for threads to finish
-        executor.shutdown(wait=True)
+
     
     # Give threads a moment to fully clean up before interpreter shutdown
     time.sleep(0.1)
@@ -197,7 +196,7 @@ def scrape_eater_blogs_concurrently(urls: list[str], max_workers: int = 5):
 
 
 
-if __name__ == "__main__":
+def main():
     # Load URLs from the markdown configuration file
     urls_to_scrape = load_urls_from_markdown()
     
@@ -206,3 +205,9 @@ if __name__ == "__main__":
     else:
         logger.info(f"Starting scrape of {len(urls_to_scrape)} URLs")
         scrape_eater_blogs_concurrently(urls_to_scrape)
+    
+    # Clean up database resources
+    close_database()
+
+if __name__ == "__main__":
+    main()
