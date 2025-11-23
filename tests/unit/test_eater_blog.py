@@ -305,3 +305,32 @@ def test_scrape_eater_blogs_concurrently_all_failures(mock_scrape_single):
     
     # All URLs should have been attempted
     assert mock_scrape_single.call_count == 3 
+
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        ("not a list"),
+        (123),
+        (None),
+        ({"key": "value"}),
+        ((1, 2, 3),)
+    ],
+    ids=[
+        "string_input",
+        "integer_input",
+        "none_input",
+        "dict_input",
+        "tuple_input"
+    ]
+)
+def test_scrape_eater_blogs_concurrently_invalid_input(invalid_input):
+    """
+    Test that ValueError is raised when input is not a list.
+    """
+    
+    with pytest.raises(ValueError) as excinfo:
+        scrape_eater_blogs_concurrently(invalid_input)
+    
+    expected_message = f"urls must be a list, not a {type(invalid_input)}"
+    
+    assert str(excinfo.value) == expected_message

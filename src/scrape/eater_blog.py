@@ -178,6 +178,8 @@ def scrape_eater_blogs_concurrently(urls: list[str], max_workers: int = 5):
         urls (list[str]): A list of Eater blog post URLs to scrape.
         max_workers (int): The maximum number of threads to use.
     """
+    if not isinstance(urls, list):
+        raise ValueError(f"urls must be a list, not a {type(urls)}")
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_url = {executor.submit(scrape_eater_blog, url): url for url in urls}
         for future in concurrent.futures.as_completed(future_to_url):
