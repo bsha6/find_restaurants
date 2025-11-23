@@ -85,7 +85,7 @@ def test_extract_restaurant_data_mixed_items(sample_json_ld):
             {json.dumps(sample_json_ld)}
         </script>
         <div class="duet--article--map-card" data-slug="test-slug">
-            <span class="hkfm3hg">123 Test St, Test City, TC 12345</span>
+            <span class="hkfm3hh">123 Test St, Test City, TC 12345</span>
             <p class="duet--article--dangerously-set-cms-markup">A fantastic test restaurant.</p>
         </div>
     </html>

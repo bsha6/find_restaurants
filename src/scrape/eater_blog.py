@@ -70,7 +70,7 @@ def extract_map_card_info(soup: BeautifulSoup, restaurant: dict) -> tuple[str | 
     description = None
     map_card = soup.find('div', {'class': 'duet--article--map-card', 'data-slug': restaurant.get('url', '').split('#')[-1]})
     if isinstance(map_card, Tag):
-        address_span = map_card.find('span', class_='hkfm3hg')
+        address_span = map_card.find('span', class_='hkfm3hh')
         if address_span:
             address = address_span.text.strip()
         description_paragraphs = map_card.find_all('p', class_='duet--article--dangerously-set-cms-markup')
